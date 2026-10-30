@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klipper Companion</title>
+<style>
+:root{--bg:#f4f6f8;--fg:#1b2430;--mut:#5a6677;--card:#fff;--line:#d6dce4;--ok:#17744a;--warn:#9a5b00;--bad:#b3261e;--acc:#1f5fbf}
+@media(prefers-color-scheme:dark){:root{--bg:#11151b;--fg:#e5e9ef;--mut:#92a0b3;--card:#1a2029;--line:#2b3441;--ok:#4cc38a;--warn:#e0a03a;--bad:#ff7b72;--acc:#6aa5ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+h1{font-size:1.15rem;margin:0}
+h2{font-size:1rem;margin:0 0 10px}
+h3{font-size:.95rem;margin:0}
+main{max-width:46rem;margin:0 auto;padding:16px 20px 40px;display:grid;gap:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+p{margin:6px 0}.mut{color:var(--mut);font-size:.9rem}
+.pill{padding:2px 12px;border-radius:99px;border:1px solid currentColor;font-size:.9rem}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.issue{border-left:3px solid var(--bad);padding:2px 0 2px 12px;margin:12px 0}
+.lint{border-left-color:var(--warn)}
+textarea{width:100%;min-height:5rem;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+button{margin-top:8px;padding:8px 16px;border:0;border-radius:6px;background:var(--acc);color:#fff;font:inherit;cursor:pointer}
+button:disabled{opacity:.6}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#answer{white-space:pre-wrap;margin-top:12px}
+#cam{display:block;max-width:100%;border-radius:6px;background:var(--bg);min-height:2rem}
+#lookOut{white-space:pre-wrap;margin-top:12px}
+button+button{margin-left:8px}
+</style>
+<header><h1>Klipper Companion <span id="ver" class="mut"></span></h1><span id="pill" class="pill warn">connecting</span></header>
+<main>
+<section><h2>Needs attention</h2><div id="issues"></div></section>
+<section><h2>printer.cfg check</h2><div id="lint"></div><button id="relint">Check again</button></section>
+<section><h2>Camera</h2><img id="cam" alt="Latest webcam snapshot">
+<button id="camBtn">Refresh</button><button id="lookBtn">Look at my print</button>
+<p id="watch" class="mut"></p><div id="lookOut"></div></section>
+<section><h2>Ask about your printer</h2>
+<textarea id="q" placeholder="Why does my homing fail? Help me set up a PRINT_START macro."></textarea>
+<button id="send">Ask</button><div id="answer"></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
+async function refresh(){
+ try{
+  const s=await(await fetch('api/status')).json();
+  const p=$('#pill');p.textContent=s.state;
+  p.className='pill '+(s.state==='ready'?'ok':s.state==='startup'?'warn':'bad');
+  $('#ver').textContent=s.version?'v'+s.version:'';
+  $('#watch').textContent=s.watch&&s.watch.verdict?'Automatic check at '+s.watch.time+': '+s.watch.verdict:'';
+  const box=$('#issues');box.replaceChildren();
+  if(s.state!=='ready'&&s.message)box.append(el('p','mut',s.message));
+  if(!s.issues.length&&s.state==='ready')box.append(el('p','mut','No known errors. Klipper reports ready.'));
+  for(const i of s.issues){const d=el('div','issue');d.append(el('h3',0,i.title),el('p','mut',i.match),el('p',0,i.fix));box.append(d)}
+ }catch(e){}
+}
+async function relint(){
+ const box=$('#lint');box.replaceChildren(el('p','mut','Checking...'));
+ try{
+  const r=await(await fetch('api/lint')).json();box.replaceChildren();
+  if(r.error)box.append(el('p','bad',r.error));
+  else if(!r.issues.length)box.append(el('p','mut','No structural problems found in printer.cfg. Included files are not checked.'));
+  for(const m of r.issues){box.append(el('div','issue lint',m))}
+ }catch(e){box.replaceChildren(el('p','bad','Check failed.'))}
+}
+$('#relint').onclick=relint;
+$('#send').onclick=async()=>{
+ const q=$('#q').value.trim();if(!q)return;
+ const b=$('#send'),a=$('#answer');b.disabled=true;a.textContent='Thinking...';
+ try{const r=await fetch('api/ask',{method:'POST',body:JSON.stringify({question:q})});const rd=r.body.getReader(),dec=new TextDecoder();a.textContent='';
+  for(;;){const{done,value}=await rd.read();if(done)break;a.textContent+=dec.decode(value,{stream:true})}}
+ catch(e){a.textContent='Request failed.'}
+ b.disabled=false;
+};
+const cam=()=>{$('#cam').src='api/snapshot?t='+Date.now()};
+$('#camBtn').onclick=cam;
+$('#lookBtn').onclick=async()=>{
+ const b=$('#lookBtn'),a=$('#lookOut');b.disabled=true;a.textContent='Looking...';
+ try{a.textContent=(await(await fetch('api/look',{method:'POST',body:JSON.stringify({question:''})})).json()).answer}
+ catch(e){a.textContent='Request failed.'}
+ b.disabled=false;
+};
+cam();setInterval(cam,15000);
+refresh();relint();setInterval(refresh,5000);
+</script>
+</html>

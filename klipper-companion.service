@@ -1,0 +1,19 @@
+[Unit]
+Description=Klipper Companion
+After=moonraker.service
+
+[Service]
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/klipper-companion/companion.py
+Restart=on-failure
+# Optional chat model (any OpenAI-compatible server, e.g. Ollama):
+# Environment=LLM_URL=http://127.0.0.1:11434/v1/chat/completions
+# Environment=LLM_MODEL=qwen2.5:3b
+
+# Webcam: uses the first webcam configured in Mainsail/Fluidd. Needs a vision model on another machine.
+# Environment=VISION_URL=http://192.168.1.50:11434/v1/chat/completions
+# Environment=VISION_MODEL=llava
+# Environment=WATCH_MINUTES=5
+
+[Install]
+WantedBy=multi-user.target

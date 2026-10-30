@@ -1,0 +1,117 @@
+[
+ {
+  "pattern": "Option '(.+?)' in section '(.+?)' must be specified",
+  "title": "Required option missing",
+  "fix": "Add `{0}:` to the [{1}] section of printer.cfg. The Klipper Config Reference lists the expected value."
+ },
+ {
+  "pattern": "Section '(.+?)' is not a valid config section",
+  "title": "Unknown config section",
+  "fix": "[{0}] isn't a section Klipper recognises. Check for a typo, a missing prefix (like `stepper_z` or `gcode_macro NAME`), or a feature your Klipper version lacks."
+ },
+ {
+  "pattern": "Option '(.+?)' is not valid in section '(.+?)'",
+  "title": "Option not allowed here",
+  "fix": "Remove or rename `{0}` in [{1}]. It is misspelled or belongs to a different section."
+ },
+ {
+  "pattern": "Unable to parse option '(.+?)' in section '(.+?)'",
+  "title": "Bad value format",
+  "fix": "The value of `{0}` in [{1}] isn't in the expected format (number, pin name, or comma list). Compare it with the Config Reference."
+ },
+ {
+  "pattern": "Unknown pin chip name '(.+?)'",
+  "title": "Unknown pin prefix",
+  "fix": "The pin prefix `{0}` matches no configured chip. Check the pin spelling and that the matching [mcu {0}] or expander section exists."
+ },
+ {
+  "pattern": "Unknown command:\\s*\\\"?([\\w-]+)",
+  "title": "Unknown G-code command",
+  "fix": "`{0}` isn't defined. Check for a typo, add a [gcode_macro {0}] section, or confirm the module that provides it is enabled."
+ },
+ {
+  "pattern": "Must home axis first",
+  "title": "Axis not homed",
+  "fix": "Run G28 before moves, or add it near the start of your PRINT_START macro."
+ },
+ {
+  "pattern": "Move out of range",
+  "title": "Move outside printer limits",
+  "fix": "Check position_min/position_max on each stepper and that your macro isn't moving past them. Home first."
+ },
+ {
+  "pattern": "Heater (\\S+) not heating at expected rate",
+  "title": "Heater not heating",
+  "fix": "Check heater wiring, thermistor seating (a loose sensor trips this), and the heater pin. Re-run PID tuning afterward. Don't leave the printer unattended until it's resolved."
+ },
+ {
+  "pattern": "(?i)ADC out of range",
+  "title": "Thermistor reading invalid",
+  "fix": "Usually a disconnected or shorted thermistor, or a wrong sensor_pin or sensor_type. Check wiring and pin before restarting."
+ },
+ {
+  "pattern": "(?i)Unable to connect|Lost communication with MCU",
+  "title": "MCU connection problem",
+  "fix": "Check the USB/serial cable and power, then confirm the `serial:` path in [mcu] matches `ls /dev/serial/by-id/`. Run FIRMWARE_RESTART afterward."
+ },
+ {
+  "pattern": "Timer too close|Rescheduled timer in the past",
+  "title": "MCU timing error",
+  "fix": "Often a flaky USB cable, electrical noise, or an overloaded host. Try another cable and check Pi power and CPU load."
+ },
+ {
+  "pattern": "Error evaluating '(.+?)'",
+  "title": "Macro template error",
+  "fix": "Klipper couldn't render `{0}`. Look for an undefined variable, an unclosed brace or `{% %}` block, or a wrong `printer.` object name in that macro."
+ },
+ {
+  "pattern": "No trigger on (\\S+) after full movement",
+  "title": "Endstop never triggered",
+  "fix": "Check the {0} endstop or probe wiring, its pin and pull-up/invert markers (`^`, `!`), and test with QUERY_ENDSTOPS."
+ },
+ {
+  "pattern": "Probe triggered prior to movement",
+  "title": "Probe already triggered",
+  "fix": "The probe reads triggered at rest. Check pin inversion (`!`), wiring, and that nothing touches it. QUERY_PROBE shows the live state."
+ },
+ {
+  "pattern": "Endstop (\\S+) still triggered after retract",
+  "title": "Endstop stuck triggered",
+  "fix": "Check pin inversion (`!`), wiring, and that the axis really moved off the switch. QUERY_ENDSTOPS shows the live state."
+ },
+ {
+  "pattern": "Move exceeds maximum extrusion",
+  "title": "Extrusion too large for one move",
+  "fix": "Check slicer line width and flow, and the extruder `rotation_distance`. Raise `max_extrude_cross_section` in [extruder] only if the move is intended."
+ },
+ {
+  "pattern": "Extrude below minimum temp",
+  "title": "Nozzle too cold to extrude",
+  "fix": "Heat the nozzle above `min_extrude_temp` before extruding. In macros, wait with M109 before any extrusion."
+ },
+ {
+  "pattern": "Unknown heater '(.+?)'",
+  "title": "Unknown heater name",
+  "fix": "`{0}` isn't a configured heater. Check the spelling and that the matching [heater_generic] or [extruder] section exists."
+ },
+ {
+  "pattern": "Unable to read tmc (?:uart|spi)",
+  "title": "TMC driver not responding",
+  "fix": "Check driver wiring and power, the uart/spi pin settings, and that the driver is seated. A wrong `uart_address` is a common cause."
+ },
+ {
+  "pattern": "pin '(.+?)' is not a valid pin name on mcu '(.+?)'",
+  "title": "Invalid pin name",
+  "fix": "`{0}` isn't a valid pin on mcu `{1}`. Check your board's pinout and the spelling, including any prefix such as `^` or `!`."
+ },
+ {
+  "pattern": "pin (\\S+) used multiple times in config",
+  "title": "Pin used twice",
+  "fix": "Two sections claim pin {0}. Find the duplicate in printer.cfg and give each function its own pin."
+ },
+ {
+  "pattern": "Printer is not ready|Printer is shutdown",
+  "title": "Printer needs a restart",
+  "fix": "Fix the error above, then run FIRMWARE_RESTART (or RESTART for config-only changes)."
+ }
+]
